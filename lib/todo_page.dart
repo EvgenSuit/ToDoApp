@@ -104,13 +104,11 @@ class _ToDoAppState extends State<ToDoApp> {
     if (justCreated) {
       setState(() {
         indexGlobal += 1;
+        index = indexGlobal;
       });
-      index = indexGlobal;
       indicesList.add(index);
       isFirst.add(true);
     }
-    print(index);
-    print(indicesList);
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -151,7 +149,7 @@ class _ToDoAppState extends State<ToDoApp> {
           Row(
             children: [
               SizedBox(
-                width: 230,
+                width: 330,
               ),
               Expanded(
                 child: TextButton(
@@ -185,7 +183,6 @@ class _ToDoAppState extends State<ToDoApp> {
   void save(BuildContext context, final titleController, final textController,
       final formKey, int index, bool toChange) {
     if (titleController == null || textController == null) {
-      print('null');
       goBack(context, index);
       setState(() {
         indexGlobal -= 1;
@@ -193,24 +190,33 @@ class _ToDoAppState extends State<ToDoApp> {
       });
       return;
     }
-    if (titleController.text.isEmpty && textController.text.isEmpty) {
-      print('empty');
+    if (index != 0) {
       setState(() {
         isFirst[index] = false;
       });
-      goBack(context, index);
-      return;
     }
+
     if (toChange) {
       update(context, titleController, textController, formKey, index);
+      return;
+    }
+
+    if (titleController.text.isEmpty || textController.text.isEmpty) {
+      goBack(context, index);
+      setState(() {
+        indexGlobal -= 1;
+        indicesList.removeLast();
+      });
+
+      isFirst.removeLast();
       return;
     }
 
     Navigator.pop(context);
     setState(() {
       texts.add(textController.text);
-      final newWidgetInstance = newWidget(titleController, textController,
-          formKey, indexGlobal, textController.text);
+      final newWidgetInstance = newWidget(
+          titleController, textController, formKey, index, textController.text);
       widgetList.add(newWidgetInstance);
     });
   }
@@ -289,6 +295,7 @@ class _ToDoAppState extends State<ToDoApp> {
               children: [
                 SizedBox(
                   width: 1,
+                  height: 80,
                 ),
                 TextButton(
                   onPressed: () => deleteWidget(indexReal),
@@ -298,10 +305,10 @@ class _ToDoAppState extends State<ToDoApp> {
                     color: Colors.red,
                   ),
                   style: ButtonStyle(
-                      fixedSize: MaterialStateProperty.all(const Size(40, 40))),
+                      fixedSize: MaterialStateProperty.all(const Size(60, 60))),
                 ),
                 SizedBox(
-                  width: 80,
+                  width: 100,
                 ),
                 TextButton(
                     onPressed: null,
@@ -325,18 +332,15 @@ class _ToDoAppState extends State<ToDoApp> {
   }
 
   void deleteWidget(int index) {
-    //index = indicesList.indexOf(index);
+    index = indicesList.indexOf(index);
     setState(() {
       indicesList.removeAt(index);
       widgetList.removeAt(index);
 
-      if (isFirst.length % 3 == 0) {
-        for (int i = 1; i < isFirst.length; i++) {
-          //isFirst.removeAt(i);
-        }
-      }
       if (indicesList.length == 1) {
         indexGlobal = 0;
+        isFirst.clear();
+        isFirst.add(true);
       }
     });
     setState(() {});
