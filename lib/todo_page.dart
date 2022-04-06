@@ -320,7 +320,7 @@ class _ToDoAppState extends State<ToDoApp> {
                     ),
                     style: ButtonStyle(
                         fixedSize:
-                            MaterialStateProperty.all(const Size(0, 40)))),
+                            MaterialStateProperty.all(const Size(40, 40)))),
                 SizedBox(
                   width: 1,
                 ),
