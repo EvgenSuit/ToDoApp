@@ -108,7 +108,6 @@ class _ToDoAppState extends State<ToDoApp> {
       });
       indicesList.add(index);
       isFirst.add(true);
-      print('In toFill $isFirst, i: $index');
     }
     Navigator.push(
         context,
@@ -342,7 +341,6 @@ class _ToDoAppState extends State<ToDoApp> {
         indexGlobal = 0;
         isFirst.clear();
         isFirst.add(true);
-        print(isFirst);
       }
     });
     setState(() {});
