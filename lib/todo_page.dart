@@ -106,6 +106,7 @@ class _ToDoAppState extends State<ToDoApp> {
         indexGlobal += 1;
         index = indexGlobal;
       });
+
       indicesList.add(index);
       isFirst.add(true);
     }
@@ -149,7 +150,7 @@ class _ToDoAppState extends State<ToDoApp> {
           Row(
             children: [
               SizedBox(
-                width: 330,
+                width: 230,
               ),
               Expanded(
                 child: TextButton(
@@ -196,11 +197,6 @@ class _ToDoAppState extends State<ToDoApp> {
       });
     }
 
-    if (toChange) {
-      update(context, titleController, textController, formKey, index);
-      return;
-    }
-
     if (titleController.text.isEmpty || textController.text.isEmpty) {
       goBack(context, index);
       setState(() {
@@ -212,11 +208,16 @@ class _ToDoAppState extends State<ToDoApp> {
       return;
     }
 
+    if (toChange) {
+      update(context, titleController, textController, formKey, index);
+      return;
+    }
+
     Navigator.pop(context);
     setState(() {
       texts.add(textController.text);
-      final newWidgetInstance = newWidget(
-          titleController, textController, formKey, index, textController.text);
+      final newWidgetInstance =
+          newWidget(titleController, textController, formKey, index);
       widgetList.add(newWidgetInstance);
     });
   }
@@ -224,10 +225,9 @@ class _ToDoAppState extends State<ToDoApp> {
   void update(BuildContext context, final titleController, final textController,
       final formKey, int index) {
     Navigator.pop(context);
-    String prevText = texts[index];
     setState(() {
       widgetList[index] =
-          newWidget(titleController, textController, formKey, index, prevText);
+          newWidget(titleController, textController, formKey, index);
     });
   }
 
@@ -236,9 +236,9 @@ class _ToDoAppState extends State<ToDoApp> {
   }
 
   Widget newWidget(final titleController, final textController, final formKey,
-      final indexReal, String prevText) {
+      final indexReal) {
     String title = titleController.text;
-    String text = prevText + textController.text;
+    String text = textController.text;
     const maxLenght = 150;
 
     if (text.characters.length >= maxLenght) {
