@@ -1,30 +1,42 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'todo_page.dart';
+import 'load_widgets.dart';
 
 class SignIn extends StatefulWidget {
-  const SignIn({Key? key}) : super(key: key);
+  SignIn({Key? key}) : super(key: key);
 
   @override
   State<SignIn> createState() => _SignInState();
 }
 
 class _SignInState extends State<SignIn> {
+  List filesContent = [];
   CameraController? controller;
   FaceDetector? _faceDetector;
   bool _isCameraInitialized = false;
-  bool doesSmile = false;
   List<Face>? _faces;
   late CameraController _controller;
   Future<void>? _initializeControllerFuture;
+  bool doesSmile = false;
+  double smilingThreshold = 0.2;
+
+  void initState() {
+    super.initState();
+    initializeCamera();
+    loadModel();
+  }
 
   initializeCamera() async {
     final cameras = await availableCameras();
     _controller =
         CameraController(cameras[1], ResolutionPreset.high, enableAudio: false);
+    //_controller.setFlashMode(FlashMode.off);
     setState(() {
       _initializeControllerFuture = _controller.initialize();
     });
@@ -53,7 +65,7 @@ class _SignInState extends State<SignIn> {
   transferToMainPage() {
     if (_faces != null) {
       for (var face in _faces!) {
-        if (face.smilingProbability! > 0.5) {
+        if (face.smilingProbability! > smilingThreshold) {
           setState(() {
             doesSmile = true;
           });
@@ -61,20 +73,14 @@ class _SignInState extends State<SignIn> {
       }
     }
 
-    if (doesSmile) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ToDoApp(),
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ToDoApp(
+          doesSmile: doesSmile,
         ),
-      );
-    }
-  }
-
-  void initState() {
-    super.initState();
-    initializeCamera();
-    loadModel();
+      ),
+    );
   }
 
   void dispose() {
@@ -110,8 +116,24 @@ class _SignInState extends State<SignIn> {
               Center(
                 child: TextButton(
                   child: Text('Sign in'),
-                  onPressed: () {
-                    detectFaces();
+                  onPressed: () async {
+                    //detectFaces();
+                    //LoadWidgets loadWidgets = LoadWidgets();
+                    //filesContent = await loadWidgets.loadWidgets();
+
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    final filesContent = prefs.getStringList('content');
+                    print(filesContent);
+                    //print(filesContent);
+                    await Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ToDoApp(
+                          doesSmile: false, //change it later
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
