@@ -18,6 +18,7 @@ class ToDoApp extends StatefulWidget {
 
 class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
   List<String> tasksContents = [];
+  bool loadWidgets = true;
   final text = '';
   int indexGlobal = 0;
   int title = 0;
@@ -73,19 +74,33 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance!.addObserver(this);
-    createControllers();
-    //save(context, titleController, textController, formKey, index, false);
   }
 
-  createControllers() {
-    GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    TextEditingController titleController = TextEditingController();
-    //titleController.text = tasksContents[0];
-    //print(titleController.text);
+  createControllers(BuildContext context) {
+    List filesContent = widget.filesContent!;
+    for (List content in filesContent) {
+      GlobalKey<FormState> formKey = GlobalKey<FormState>();
+      TextEditingController titleController = TextEditingController();
+      TextEditingController textController = TextEditingController();
+      titleController.text = content[0];
+      textController.text = content[1];
+      setState(() {
+        indexGlobal += 1;
+      });
+      save(
+          context, titleController, textController, formKey, indexGlobal, false,
+          back: false);
+    }
+    setState(() {
+      loadWidgets = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loadWidgets) {
+      createControllers(context);
+    }
     return Scaffold(
       body: Container(
         decoration: background(),
@@ -190,7 +205,6 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
       textController = TextEditingController();
       formKey = GlobalKey<FormState>();
     }
-
     return Scaffold(
         body: Form(
       key: formKey,
@@ -218,7 +232,7 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
             child: TextFormField(
               controller: titleController,
               decoration: InputDecoration(labelText: 'Task title'),
-              maxLength: 25,
+              maxLength: 30,
             ),
           ),
           Padding(
@@ -235,7 +249,8 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
   }
 
   void save(BuildContext context, final titleController, final textController,
-      final formKey, int index, bool toChange) async {
+      final formKey, int index, bool toChange,
+      {bool back = true}) {
     if (titleController == null || textController == null) {
       goBack(context, index);
       setState(() {
@@ -244,7 +259,12 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
       });
       return;
     }
+
     if (index != 0) {
+      if (!back) {
+        isFirst.add(false);
+        indicesList.add(index);
+      }
       setState(() {
         isFirst[index] = false;
       });
@@ -266,14 +286,11 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
       return;
     }
 
-    Navigator.pop(context);
+    if (back) {
+      Navigator.pop(context);
+    }
 
-    /*task.saveFile();
-    final content = await task.readFile();
-    SaveTask.listDir();
-    print(content); */
     setState(() {
-      texts.add(textController.text);
       tasksContents.add('${titleController.text}[sep]${textController.text}');
       final newWidgetInstance =
           newWidget(titleController, textController, formKey, index);
@@ -401,6 +418,7 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
     setState(() {
       indicesList.removeAt(index);
       widgetList.removeAt(index);
+      tasksContents.removeAt(index - 1);
 
       if (indicesList.length == 1) {
         indexGlobal = 0;
@@ -408,13 +426,13 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
         isFirst.add(true);
       }
     });
-    setState(() {});
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    print('STATE >>>>>>>>> $state');
+    print(tasksContents);
+
     await prefs.setStringList('content', tasksContents);
   }
 

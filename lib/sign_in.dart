@@ -121,15 +121,18 @@ class _SignInState extends State<SignIn> {
                     //LoadWidgets loadWidgets = LoadWidgets();
                     //filesContent = await loadWidgets.loadWidgets();
 
+                    List finalContent = [];
                     SharedPreferences prefs =
                         await SharedPreferences.getInstance();
                     final filesContent = prefs.getStringList('content');
-                    print(filesContent);
-                    //print(filesContent);
+                    for (String content in filesContent!) {
+                      finalContent.add(content.split('[sep]'));
+                    }
                     await Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ToDoApp(
+                          filesContent: finalContent,
                           doesSmile: false, //change it later
                         ),
                       ),
