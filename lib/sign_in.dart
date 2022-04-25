@@ -24,7 +24,7 @@ class _SignInState extends State<SignIn> {
   late CameraController _controller;
   Future<void>? _initializeControllerFuture;
   bool doesSmile = false;
-  double smilingThreshold = 0.2;
+  double smilingThreshold = 0.1;
 
   void initState() {
     super.initState();
@@ -59,10 +59,10 @@ class _SignInState extends State<SignIn> {
     setState(() {
       _faces = faces;
     });
-    transferToMainPage();
+    whetherSmiles();
   }
 
-  transferToMainPage() {
+  whetherSmiles() {
     if (_faces != null) {
       for (var face in _faces!) {
         if (face.smilingProbability! > smilingThreshold) {
@@ -117,23 +117,21 @@ class _SignInState extends State<SignIn> {
                 child: TextButton(
                   child: Text('Sign in'),
                   onPressed: () async {
-                    //detectFaces();
-                    //LoadWidgets loadWidgets = LoadWidgets();
-                    //filesContent = await loadWidgets.loadWidgets();
-
                     List finalContent = [];
                     SharedPreferences prefs =
                         await SharedPreferences.getInstance();
                     final filesContent = prefs.getStringList('content');
-                    for (String content in filesContent!) {
-                      finalContent.add(content.split('[sep]'));
-                    }
+                    if (filesContent != null)
+                      for (String content in filesContent!) {
+                        finalContent.add(content.split('[sep]'));
+                      }
+                    await detectFaces();
                     await Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ToDoApp(
                           filesContent: finalContent,
-                          doesSmile: false, //change it later
+                          doesSmile: doesSmile, //change it later
                         ),
                       ),
                     );

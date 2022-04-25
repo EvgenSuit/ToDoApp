@@ -98,7 +98,7 @@ class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (loadWidgets) {
+    if (loadWidgets && widget.filesContent != null) {
       createControllers(context);
     }
     return Scaffold(
