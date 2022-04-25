@@ -1,14 +1,24 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'sign_in.dart';
+import 'save_widget.dart';
+import 'load_widgets.dart';
 
 class ToDoApp extends StatefulWidget {
-  const ToDoApp({Key? key}) : super(key: key);
+  ToDoApp({Key? key, this.doesSmile, this.filesContent}) : super(key: key);
+  bool? doesSmile;
+  List? filesContent;
 
   @override
   State<ToDoApp> createState() => _ToDoAppState();
 }
 
-class _ToDoAppState extends State<ToDoApp> {
+class _ToDoAppState extends State<ToDoApp> with WidgetsBindingObserver {
+  List<String> tasksContents = [];
+  bool loadWidgets = true;
   final text = '';
   int indexGlobal = 0;
   int title = 0;
@@ -21,16 +31,79 @@ class _ToDoAppState extends State<ToDoApp> {
   List<String> texts = [''];
   List<bool> isFirst = [true];
 
+  Color? titleColor;
+  Color? textColor;
+  List<Color> darkThemeColors = [Colors.black, Colors.lightBlueAccent];
+  List<Color> lightThemeColors = [Colors.blue[900]!, Colors.lightBlue];
+  List colors = [];
+  BoxDecoration background() {
+    List colors = widget.doesSmile! ? lightThemeColors : darkThemeColors;
+    return BoxDecoration(
+        gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: [0.5, 0.9],
+            colors: [colors[0], colors[1]]));
+  }
+
+  List<Color> taskLightColors = [
+    Colors.yellow,
+    Colors.blue,
+    Colors.orange,
+    Colors.pink
+  ];
+  List<Color> taskDarkColors = [
+    Colors.indigo,
+    Colors.white12,
+    Colors.indigo,
+    Colors.white12
+  ];
+  BoxDecoration taskBackground() {
+    List<Color> colors = widget.doesSmile! ? taskLightColors : taskDarkColors;
+    return BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          stops: [0.1, 0.4, 0.6, 0.9],
+          colors: colors,
+        ),
+        borderRadius: BorderRadius.all(Radius.circular(25)));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+  }
+
+  createControllers(BuildContext context) {
+    List filesContent = widget.filesContent!;
+    for (List content in filesContent) {
+      GlobalKey<FormState> formKey = GlobalKey<FormState>();
+      TextEditingController titleController = TextEditingController();
+      TextEditingController textController = TextEditingController();
+      titleController.text = content[0];
+      textController.text = content[1];
+      setState(() {
+        indexGlobal += 1;
+      });
+      save(
+          context, titleController, textController, formKey, indexGlobal, false,
+          back: false);
+    }
+    setState(() {
+      loadWidgets = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (loadWidgets && widget.filesContent != null) {
+      createControllers(context);
+    }
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                stops: [0.5, 0.9],
-                colors: [Colors.blue[900]!, Colors.lightBlue])),
+        decoration: background(),
         child: Column(
           children: [
             SizedBox(
@@ -49,23 +122,18 @@ class _ToDoAppState extends State<ToDoApp> {
     );
   }
 
-  Widget toCreate() {
+  toCreate() {
+    titleColor = widget.doesSmile! ? Colors.black : Colors.white;
     return Container(
-      decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.1, 0.4, 0.6, 0.9],
-            colors: [Colors.yellow, Colors.blue, Colors.orange, Colors.pink],
-          ),
-          borderRadius: BorderRadius.all(Radius.circular(25))),
+      decoration: taskBackground(),
       width: 500,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             'Add Task',
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                fontSize: 25, fontWeight: FontWeight.bold, color: titleColor),
           ),
           SizedBox(
             height: 100,
@@ -137,7 +205,6 @@ class _ToDoAppState extends State<ToDoApp> {
       textController = TextEditingController();
       formKey = GlobalKey<FormState>();
     }
-
     return Scaffold(
         body: Form(
       key: formKey,
@@ -165,7 +232,7 @@ class _ToDoAppState extends State<ToDoApp> {
             child: TextFormField(
               controller: titleController,
               decoration: InputDecoration(labelText: 'Task title'),
-              maxLength: 15,
+              maxLength: 30,
             ),
           ),
           Padding(
@@ -182,7 +249,8 @@ class _ToDoAppState extends State<ToDoApp> {
   }
 
   void save(BuildContext context, final titleController, final textController,
-      final formKey, int index, bool toChange) {
+      final formKey, int index, bool toChange,
+      {bool back = true}) {
     if (titleController == null || textController == null) {
       goBack(context, index);
       setState(() {
@@ -191,7 +259,12 @@ class _ToDoAppState extends State<ToDoApp> {
       });
       return;
     }
+
     if (index != 0) {
+      if (!back) {
+        isFirst.add(false);
+        indicesList.add(index);
+      }
       setState(() {
         isFirst[index] = false;
       });
@@ -213,9 +286,12 @@ class _ToDoAppState extends State<ToDoApp> {
       return;
     }
 
-    Navigator.pop(context);
+    if (back) {
+      Navigator.pop(context);
+    }
+
     setState(() {
-      texts.add(textController.text);
+      tasksContents.add('${titleController.text}[sep]${textController.text}');
       final newWidgetInstance =
           newWidget(titleController, textController, formKey, index);
       widgetList.add(newWidgetInstance);
@@ -238,7 +314,9 @@ class _ToDoAppState extends State<ToDoApp> {
   Widget newWidget(final titleController, final textController, final formKey,
       final indexReal) {
     String title = titleController.text;
+    titleColor = widget.doesSmile! ? Colors.black : Colors.white;
     String text = textController.text;
+    textColor = widget.doesSmile! ? Colors.black : Colors.grey[300];
     const maxLenght = 150;
 
     if (text.characters.length >= maxLenght) {
@@ -251,11 +329,9 @@ class _ToDoAppState extends State<ToDoApp> {
     if (title.isEmpty) {
       title = 'Task title';
     }
+
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(30)),
-        color: Colors.yellow,
-      ),
+      decoration: taskBackground(),
       width: MediaQuery.of(context).size.width - 50,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -278,14 +354,20 @@ class _ToDoAppState extends State<ToDoApp> {
                 children: [
                   Text(
                     title.toString(),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: titleColor),
                   ),
                   SizedBox(
                     height: 20,
                   ),
                   SizedBox(
                     width: 250,
-                    child: Text(text),
+                    child: Text(
+                      text,
+                      style: TextStyle(color: textColor),
+                    ),
                   )
                 ],
               )),
@@ -336,6 +418,7 @@ class _ToDoAppState extends State<ToDoApp> {
     setState(() {
       indicesList.removeAt(index);
       widgetList.removeAt(index);
+      tasksContents.removeAt(index - 1);
 
       if (indicesList.length == 1) {
         indexGlobal = 0;
@@ -343,6 +426,20 @@ class _ToDoAppState extends State<ToDoApp> {
         isFirst.add(true);
       }
     });
-    setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    print(tasksContents);
+
+    await prefs.setStringList('content', tasksContents);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+
+    super.dispose();
   }
 }

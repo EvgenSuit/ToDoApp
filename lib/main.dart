@@ -3,11 +3,12 @@ import 'todo_page.dart';
 import 'sign_in.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final key = GlobalKey();
+  MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
