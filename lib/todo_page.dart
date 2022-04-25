@@ -5,7 +5,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'sign_in.dart';
 import 'save_widget.dart';
-import 'load_widgets.dart';
 
 class ToDoApp extends StatefulWidget {
   ToDoApp({Key? key, this.doesSmile, this.filesContent}) : super(key: key);

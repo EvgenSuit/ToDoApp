@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'todo_page.dart';
-import 'load_widgets.dart';
 
 class SignIn extends StatefulWidget {
   SignIn({Key? key}) : super(key: key);
